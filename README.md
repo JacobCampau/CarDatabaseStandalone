@@ -6,3 +6,9 @@ A standalone version of my [Original Car Database](https://github.com/JacobCampa
 
 <br>
 To make this a more accessable tool, this project ensures there is no such expectation from the user.
+
+<h2>How to Run</h2>
+
+
+
+<h2>Components of The System</h2>
