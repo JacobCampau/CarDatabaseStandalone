@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: carInformationDatabase
+    name: carbase
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
