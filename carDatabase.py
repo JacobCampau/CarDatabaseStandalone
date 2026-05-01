@@ -1,115 +1,120 @@
-import psycopg
+import sqlite3
 
-# MACROS
-NAME = "CarInformation"
-USER = "postgres"
-PASS = "PostgresPass"
-HOST = "localhost"
-PORT = 5433
+DB_PATH = "CarInformation.db"
 
 class CarDatabase:
     def __init__(self):
-        self.databaseInfo = f"dbname = {NAME} user = {USER} password = {PASS} host = {HOST} port = {PORT}"
+        self.db_path = DB_PATH
+
+    def connect(self):
+        connection = sqlite3.connect(self.db_path)
+        connection.execute("PRAGMA foreign_keys = ON")
+        return connection
 
     def createTables(self):
-        createSQL = """
-        DROP TABLE IF EXISTS specs;
-        DROP TABLE IF EXISTS performance;
-        DROP TABLE IF EXISTS appearance;
-        DROP TABLE IF EXISTS cost;
-        DROP TABLE IF EXISTS car;
+        create_tables = [
+            "DROP TABLE IF EXISTS specs",
+            "DROP TABLE IF EXISTS performance",
+            "DROP TABLE IF EXISTS appearance",
+            "DROP TABLE IF EXISTS cost",
+            "DROP TABLE IF EXISTS car",
 
-        CREATE TABLE car (
-            car_id SERIAL PRIMARY KEY,
-            make VARCHAR NOT NULL,
-            model VARCHAR NOT NULL,
-            year INT NOT NULL
-        );
+            """
+            CREATE TABLE car (
+                car_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                year INTEGER NOT NULL
+            )
+            """,
 
-        CREATE TABLE cost (
-            car_id INT PRIMARY KEY,
-            price DOUBLE PRECISION,
-            location VARCHAR,
-            owner VARCHAR,
-            seller VARCHAR,
-            FOREIGN KEY (car_id) REFERENCES car(car_id)
-        );
+            """
+            CREATE TABLE cost (
+                car_id INTEGER PRIMARY KEY,
+                price REAL,
+                location TEXT,
+                owner TEXT,
+                seller TEXT,
+                FOREIGN KEY (car_id) REFERENCES car(car_id)
+            )
+            """,
 
-        CREATE TABLE appearance (
-            car_id INT PRIMARY KEY,
-            color VARCHAR,
-            length DOUBLE PRECISION,
-            width DOUBLE PRECISION,
-            height DOUBLE PRECISION,
-            seats INT,
-            tank_size DOUBLE PRECISION,
-            FOREIGN KEY (car_id) REFERENCES car(car_id)
-        );
+            """
+            CREATE TABLE appearance (
+                car_id  INTEGER PRIMARY KEY,
+                color   TEXT,
+                length  REAL,
+                width   REAL,
+                height  REAL,
+                seats   INTEGER,
+                tank_size REAL,
+                FOREIGN KEY (car_id) REFERENCES car(car_id)
+            )
+            """,
 
-        CREATE TABLE performance (
-            car_id INT PRIMARY KEY,
-            fuel_type VARCHAR,
-            transmission VARCHAR,
-            kilometers_driven DOUBLE PRECISION,
-            FOREIGN KEY (car_id) REFERENCES car(car_id)
-        );
+            """
+            CREATE TABLE performance (
+                car_id INTEGER PRIMARY KEY,
+                fuel_type TEXT,
+                transmission TEXT,
+                kilometers_driven REAL,
+                FOREIGN KEY (car_id) REFERENCES car(car_id)
+            )
+            """,
 
-        CREATE TABLE specs (
-            car_id INT PRIMARY KEY,
-            drivetrain VARCHAR,
-            engine VARCHAR,
-            max_power VARCHAR,
-            max_torque VARCHAR,
-            FOREIGN KEY (car_id) REFERENCES car(car_id)
-        );
-        """
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute(createSQL)
+            """
+            CREATE TABLE specs (
+                car_id INTEGER PRIMARY KEY,
+                drivetrain TEXT,
+                engine TEXT,
+                max_power TEXT,
+                max_torque TEXT,
+                FOREIGN KEY (car_id) REFERENCES car(car_id)
+            )
+            """
+        ]
+        
+        with self.connect() as conn:
+            for command in create_tables:
+                conn.execute(command)
 
     # Insertion functions
 
     def insertCar(self, make, model, year):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 INSERT INTO car (make, model, year)
-                VALUES(%s, %s, %s)
-                RETURNING car_id
+                VALUES(?, ?, ?)
                 """,(make, model, year))
 
-                return cur.fetchone()[0]
+            return cur.lastrowid
 
     def insertCost(self, cost):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 INSERT INTO cost (car_id, price, location, owner, seller)
-                VALUES(%s, %s, %s, %s, %s)
+                VALUES(?, ?, ?, ?, ?)
                 """,(cost.carId, cost.price, cost.loc, cost.own, cost.sellType))
     
     def insertAppearance(self, appear):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 INSERT INTO appearance (car_id, color, length, width, height, seats, tank_size)
-                VALUES(%s, %s, %s, %s, %s, %s, %s)
+                VALUES(?, ?, ?, ?, ?, ?, ?)
                 """,(appear.carId, appear.color, appear.length, appear.width, appear.height, appear.seatNum, appear.tank))
     
     def insertPerformance(self, perf):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 INSERT INTO performance (car_id, fuel_type, transmission, kilometers_driven)
-                VALUES(%s, %s, %s, %s)
+                VALUES(?, ?, ?, ?)
                 """,(perf.carId, perf.fuel, perf.trans, perf.kilo))
     
     def insertSpecs(self, specs):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 INSERT INTO specs (car_id, drivetrain, engine, max_power, max_torque)
-                VALUES(%s, %s, %s, %s, %s)
+                VALUES(?, ?, ?, ?, ?)
                 """,(specs.carId, specs.driveTrain, specs.engine, specs.maxPow, specs.maxTor))
 
     def importFullCar(self, car, cost, appear, perf, specs):
@@ -117,37 +122,36 @@ class CarDatabase:
         cur = self.curr
         
         cur.execute("""
-        INSERT INTO car (make, model, year)
-        VALUES(%s, %s, %s)
-        RETURNING car_id
-        """,(car.make, car.model, car.year))
+            INSERT INTO car (make, model, year)
+            VALUES(?, ?, ?)
+            """,(car.make, car.model, car.year))
 
-        carId = cur.fetchone()[0]
-
-        cur.execute("""
-        INSERT INTO cost (car_id, price, location, owner, seller)
-        VALUES(%s, %s, %s, %s, %s)
-        """,(carId, cost.price, cost.loc, cost.own, cost.sellType))
+        car_id = cur.lastrowid
 
         cur.execute("""
-        INSERT INTO appearance (car_id, color, length, width, height, seats, tank_size)
-        VALUES(%s, %s, %s, %s, %s, %s, %s)
-        """,(carId, appear.color, appear.length, appear.width, appear.height, appear.seatNum, appear.tank))
+            INSERT INTO cost (car_id, price, location, owner, seller)
+            VALUES(?, ?, ?, ?, ?)
+            """,(car_id, cost.price, cost.loc, cost.own, cost.sellType))
 
         cur.execute("""
-        INSERT INTO performance (car_id, fuel_type, transmission, kilometers_driven)
-        VALUES(%s, %s, %s, %s)
-        """,(carId, perf.fuel, perf.trans, perf.kilo))
+            INSERT INTO appearance (car_id, color, length, width, height, seats, tank_size)
+            VALUES(?, ?, ?, ?, ?, ?, ?)
+            """,(car_id, appear.color, appear.length, appear.width, appear.height, appear.seatNum, appear.tank))
 
         cur.execute("""
-        INSERT INTO specs (car_id, drivetrain, engine, max_power, max_torque)
-        VALUES(%s, %s, %s, %s, %s)
-        """,(carId, specs.driveTrain, specs.engine, specs.maxPow, specs.maxTor))
+            INSERT INTO performance (car_id, fuel_type, transmission, kilometers_driven)
+            VALUES(?, ?, ?, ?)
+            """,(car_id, perf.fuel, perf.trans, perf.kilo))
+
+        cur.execute("""
+            INSERT INTO specs (car_id, drivetrain, engine, max_power, max_torque)
+            VALUES(?, ?, ?, ?, ?)
+            """,(car_id, specs.driveTrain, specs.engine, specs.maxPow, specs.maxTor))
 
     # Manual db connection start / stop -> used for optimization during importing car info
 
     def startDbConn(self):
-        self.conn = psycopg.connect(self.databaseInfo)
+        self.conn = self.connect()
         self.curr = self.conn.cursor()
 
     def endDbConn(self):
@@ -157,30 +161,39 @@ class CarDatabase:
 
     # Filter/view functions
 
+    def isLoaded(self):
+        # Used to see if the Database has been loaded with rows (true == rows are filled with something)
+        with self.connect() as conn:
+            try:
+                cur = conn.execute("SELECT COUNT(*) FROM car")
+                return cur.fetchone()[0] > 0
+            except sqlite3.OperationalError:
+                return False
+
     def getCarDetails(self, carId):
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
+        with self.connect() as conn:
+            cur = conn.execute("""
                 SELECT cr.car_id, cr.make, cr.model, cr.year, 
-                cst.price, cst.location, cst.owner, cst.seller,
-                app.color, app.length, app.width, app.height, app.seats, app.tank_size,
-                perf.fuel_type, perf.transmission, perf.kilometers_driven,
-                spc.drivetrain, spc.engine, spc.max_power, spc.max_torque
-                FROM car cr
+                    cst.price, cst.location, cst.owner, cst.seller,
+                    app.color, app.length, app.width, app.height, app.seats, app.tank_size,
+                    perf.fuel_type, perf.transmission, perf.kilometers_driven,
+                    spc.drivetrain, spc.engine, spc.max_power, spc.max_torque
+                    FROM car cr
                 LEFT JOIN cost cst ON cst.car_id = cr.car_id
                 LEFT JOIN appearance app ON app.car_id = cr.car_id
                 LEFT JOIN performance perf ON perf.car_id = cr.car_id
                 LEFT JOIN specs spc ON spc.car_id = cr.car_id
-                WHERE cr.car_id = %s
+                WHERE cr.car_id = ?
                 """, (carId,))
-                result = cur.fetchone()
-                if result:
-                    return list(result)
-                else:
-                    return None
+
+            result = cur.fetchone()
+            if result:
+                return list(result)
+            else:
+                return None
 
     def executeFilters(self, filters):
-        filterSearch = """
+        filter_search = """
         SELECT cr.car_id, year, make, model
         FROM car cr
         LEFT JOIN cost cst ON cst.car_id = cr.car_id
@@ -189,16 +202,15 @@ class CarDatabase:
         LEFT JOIN specs spc ON spc.car_id = cr.car_id    
         """
 
-        filterStrings = []
-        insertedValues = []
+        filter_strings = []
+        inserted_values = []
 
         for string, value in filters:
-            filterStrings.append(f"{string} = %s")
-            insertedValues.append(value)
+            filter_strings.append(f"{string} = ?")
+            inserted_values.append(value)
 
-        filterSearch += "WHERE " + " AND ".join(filterStrings)
+        filter_search += "WHERE " + " AND ".join(filter_strings)
 
-        with psycopg.connect(self.databaseInfo) as conn:
-            with conn.cursor() as cur:
-                cur.execute(filterSearch, insertedValues)
-                return cur.fetchall()
+        with self.connect() as conn:
+            cur = conn.execute(filter_search, inserted_values)
+            return cur.fetchall()

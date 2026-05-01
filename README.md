@@ -10,7 +10,7 @@ A standalone version of my [Original Car Database](https://github.com/JacobCampa
 
 <h2>How to Run</h2>
 
-
+First the user needs to install the needed libraries. This can be done with the command: python3 -m pip install -r requirements.txt
 
 <h2>Components of The System</h2>
 <h3>(1) Filter Option</h3>
