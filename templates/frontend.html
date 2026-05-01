@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CarInformation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+ 
+  <style>
+    /* ── Variables ─────────────────────────────────────────────── */
+    :root {
+      --bg:           #131416;
+      --surface:      #1A1C1F;
+      --surface-2:    #222528;
+      --border:       #2C2F33;
+      --border-light: #383C41;
+      --accent:       #D0292A;
+      --accent-glow:  rgba(208,41,42,0.12);
+      --accent-dim:   #9E1F20;
+      --text:         #DDE0E4;
+      --text-muted:   #5C6068;
+      --text-dim:     #8C9098;
+      --success:      #4A9E6A;
+      --error:        #D0292A;
+      --mono:         'IBM Plex Mono', monospace;
+      --cond:         'Barlow Condensed', sans-serif;
+      --body:         'Barlow', sans-serif;
+    }
+ 
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+ 
+    /* ── Layout ────────────────────────────────────────────────── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+ 
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      padding: 40px 0 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+    .logo-mark {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { display: block; }
+    .logo-text h1 {
+      font-family: var(--cond);
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 1;
+    }
+    .logo-text p {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .header-accent {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-align: right;
+      line-height: 1.6;
+    }
+    .header-accent span {
+      display: block;
+      color: var(--accent);
+    }
+ 
+    /* ── Tabs ──────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-top: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      padding: 12px 28px;
+      font-family: var(--cond);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: var(--text-dim); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+ 
+    /* ── Panels ────────────────────────────────────────────────── */
+    .panel { display: none; padding-top: 36px; animation: fadeIn 0.2s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+ 
+    /* ── Section label ─────────────────────────────────────────── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+ 
+    /* ── Filter grid ───────────────────────────────────────────── */
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-field label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .filter-field input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+    .filter-field input:focus {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .filter-field input::placeholder { color: var(--text-muted); opacity: 0.5; }
+ 
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn {
+      font-family: var(--cond);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 11px 28px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: var(--accent);
+      color: #0D0D0D;
+    }
+    .btn-primary:hover { background: #E03333; }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text-dim);
+      border: 1px solid var(--border-light);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+ 
+    /* ── Results table ─────────────────────────────────────────── */
+    .results-wrap {
+      margin-top: 32px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .results-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .results-header span {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    .results-header .count {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead tr { background: var(--surface-2); }
+    thead th {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+    tbody td {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+    }
+    td.mono { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); }
+    td.highlight { color: var(--accent); font-family: var(--mono); font-size: 0.8rem; }
+    .click-hint {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      letter-spacing: 0.08em;
+    }
+ 
+    /* ── Add Car form ──────────────────────────────────────────── */
+    .form-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .form-group-title {
+      font-family: var(--cond);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .field label .req { color: var(--accent); margin-left: 2px; }
+    .field input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field input:focus {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .field input::placeholder { color: var(--text-muted); opacity: 0.4; }
+ 
+    /* ── View by ID ────────────────────────────────────────────── */
+    .id-search-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+    .id-search-row .field { flex: 0 0 200px; }
+ 
+    .car-card {
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .car-card-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .car-card-header h2 {
+      font-family: var(--cond);
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .car-card-header .car-id-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-dim);
+      padding: 4px 10px;
+      letter-spacing: 0.12em;
+    }
+    .car-card-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    .spec-group {
+      padding: 20px 24px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .spec-group:last-child { border-right: none; }
+    .spec-group-title {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .spec-row:last-child { border-bottom: none; }
+    .spec-key {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .spec-val {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      text-align: right;
+      max-width: 60%;
+    }
+    .spec-val.na { color: var(--text-muted); font-style: italic; }
+ 
+    /* ── Status messages ───────────────────────────────────────── */
+    .status {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 12px 16px;
+      border-left: 3px solid;
+      margin-top: 20px;
+      letter-spacing: 0.04em;
+    }
+    .status.success { border-color: var(--success); color: var(--success); background: rgba(74,158,106,0.08); }
+    .status.error   { border-color: var(--error);   color: var(--error);   background: rgba(192,57,43,0.08); }
+    .status.info    { border-color: var(--accent);  color: var(--text-dim);background: var(--accent-glow); }
+ 
+    /* ── Empty / loading states ────────────────────────────────── */
+    .empty-state {
+      padding: 48px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+    .empty-state .big { font-size: 2rem; display: block; margin-bottom: 12px; opacity: 0.3; }
+ 
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); }
+  </style>
+</head>
+<body>
+<div class="shell">
+ 
+  <!-- Header -->
+  <header>
+    <!-- <div class="logo-mark">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M3 17l2-6h14l2 6" stroke="#D0292A" stroke-width="1.5"/>
+        <circle cx="7" cy="17" r="2" stroke="#D0292A" stroke-width="1.5"/>
+        <circle cx="17" cy="17" r="2" stroke="#D0292A" stroke-width="1.5"/>
+        <path d="M5 11l2-4h10l2 4" stroke="#D0292A" stroke-width="1.5" opacity="0.4"/>
+      </svg>
+    </div> -->
+    <div class="logo-text">
+      <h1>Car Information Database</h1>
+      <p>Vehicle Data Filter System</p>
+    </div>
+    <div class="header-accent">
+      <span>v1.0</span>
+      SQLite · Flask
+    </div>
+  </header>
+ 
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="switchTab('filter')">Filter Search</button>
+    <button class="tab-btn" onclick="switchTab('add')">Add Vehicle</button>
+    <button class="tab-btn" onclick="switchTab('view')">View by ID</button>
+  </nav>
+ 
+  <!-- ── Panel 1: Filter Search ───────────────────────────────── -->
+  <div id="panel-filter" class="panel active">
+    <p class="section-label">// search parameters</p>
+ 
+    <div class="filter-grid">
+      <div class="filter-field"><label>Make</label>         <input id="f-make"        placeholder="e.g. Toyota"/></div>
+      <div class="filter-field"><label>Model</label>        <input id="f-model"       placeholder="e.g. Camry"/></div>
+      <div class="filter-field"><label>Year</label>         <input id="f-year"        placeholder="e.g. 2019"/></div>
+      <div class="filter-field"><label>Price</label>        <input id="f-price"       placeholder="exact value"/></div>
+      <div class="filter-field"><label>Location</label>     <input id="f-location"    placeholder="city/region"/></div>
+      <div class="filter-field"><label>Owner Count</label>  <input id="f-owner"       placeholder="e.g. 1"/></div>
+      <div class="filter-field"><label>Seller Type</label>  <input id="f-seller"      placeholder="e.g. Dealer"/></div>
+      <div class="filter-field"><label>Color</label>        <input id="f-color"       placeholder="e.g. White"/></div>
+      <div class="filter-field"><label>Fuel Type</label>    <input id="f-fuel_type"   placeholder="e.g. Petrol"/></div>
+      <div class="filter-field"><label>Transmission</label> <input id="f-transmission"placeholder="e.g. Manual"/></div>
+      <div class="filter-field"><label>Drivetrain</label>   <input id="f-drivetrain"  placeholder="e.g. FWD"/></div>
+      <div class="filter-field"><label>Seats</label>        <input id="f-seats"       placeholder="e.g. 5"/></div>
+    </div>
+ 
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runFilter()">Execute Search</button>
+      <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+    </div>
+ 
+    <div id="filter-status"></div>
+ 
+    <div id="filter-results" class="results-wrap" style="display:none">
+      <div class="results-header">
+        <span>// results</span>
+        <span class="count" id="result-count"></span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Year</th><th>Make</th><th>Model</th>
+        </tr></thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+    <p class="click-hint" id="click-hint" style="display:none">→ Click any row to view full details</p>
+  </div>
+ 
+  <!-- ── Panel 2: Add Vehicle ─────────────────────────────────── -->
+  <div id="panel-add" class="panel">
+    <p class="section-label">// new vehicle record</p>
+ 
+    <div class="form-group">
+      <div class="form-group-title">Basic Info</div>
+      <div class="form-row">
+        <div class="field"><label>Make <span class="req">*</span></label><input id="a-make" placeholder="e.g. Honda"/></div>
+        <div class="field"><label>Model <span class="req">*</span></label><input id="a-model" placeholder="e.g. Civic"/></div>
+        <div class="field"><label>Year <span class="req">*</span></label><input id="a-year" type="number" placeholder="e.g. 2021"/></div>
+      </div>
+    </div>
+ 
+    <div class="form-group">
+      <div class="form-group-title">Cost</div>
+      <div class="form-row">
+        <div class="field"><label>Price</label><input id="a-price" type="number" placeholder="0"/></div>
+        <div class="field"><label>Location</label><input id="a-location" placeholder="NA"/></div>
+        <div class="field"><label>Owner Count</label><input id="a-owner" placeholder="NA"/></div>
+        <div class="field"><label>Seller Type</label><input id="a-seller" placeholder="NA"/></div>
+      </div>
+    </div>
+ 
+    <div class="form-group">
+      <div class="form-group-title">Appearance</div>
+      <div class="form-row">
+        <div class="field"><label>Color</label><input id="a-color" placeholder="NA"/></div>
+        <div class="field"><label>Length</label><input id="a-length" type="number" placeholder="0"/></div>
+        <div class="field"><label>Width</label><input id="a-width" type="number" placeholder="0"/></div>
+        <div class="field"><label>Height</label><input id="a-height" type="number" placeholder="0"/></div>
+        <div class="field"><label>Seats</label><input id="a-seats" type="number" placeholder="0"/></div>
+        <div class="field"><label>Tank Size</label><input id="a-tank_size" type="number" placeholder="0"/></div>
+      </div>
+    </div>
+ 
+    <div class="form-group">
+      <div class="form-group-title">Performance</div>
+      <div class="form-row">
+        <div class="field"><label>Fuel Type</label><input id="a-fuel_type" placeholder="NA"/></div>
+        <div class="field"><label>Transmission</label><input id="a-transmission" placeholder="NA"/></div>
+        <div class="field"><label>Km Driven</label><input id="a-kilometers_driven" type="number" placeholder="0"/></div>
+      </div>
+    </div>
+ 
+    <div class="form-group">
+      <div class="form-group-title">Specs</div>
+      <div class="form-row">
+        <div class="field"><label>Drivetrain</label><input id="a-drivetrain" placeholder="NA"/></div>
+        <div class="field"><label>Engine</label><input id="a-engine" placeholder="NA"/></div>
+        <div class="field"><label>Max Power</label><input id="a-max_power" placeholder="NA"/></div>
+        <div class="field"><label>Max Torque</label><input id="a-max_torque" placeholder="NA"/></div>
+      </div>
+    </div>
+ 
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addCar()">Submit Vehicle</button>
+      <button class="btn btn-secondary" onclick="clearAddForm()">Reset</button>
+    </div>
+    <div id="add-status"></div>
+  </div>
+ 
+  <!-- ── Panel 3: View by ID ──────────────────────────────────── -->
+  <div id="panel-view" class="panel">
+    <p class="section-label">// lookup by vehicle id</p>
+ 
+    <div class="id-search-row">
+      <div class="field">
+        <label>Vehicle ID</label>
+        <input id="v-id" type="number" placeholder="e.g. 42" onkeydown="if(event.key==='Enter') lookupCar()"/>
+      </div>
+      <button class="btn btn-primary" onclick="lookupCar()">Retrieve</button>
+    </div>
+ 
+    <div id="view-status"></div>
+    <div id="car-card-wrap"></div>
+  </div>
+ 
+</div><!-- /shell -->
+ 
+<script>
+  // ── Tab switching ────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+ 
+  // ── Status helper ────────────────────────────────────────────
+  function setStatus(id, msg, type) {
+    const el = document.getElementById(id);
+    el.innerHTML = msg ? `<div class="status ${type}">${msg}</div>` : '';
+  }
+ 
+  // ── Filter Search ────────────────────────────────────────────
+  const FILTER_IDS = [
+    'make','model','year','price','location','owner',
+    'seller','color','fuel_type','transmission','drivetrain','seats'
+  ];
+ 
+  function runFilter() {
+    const params = new URLSearchParams();
+    FILTER_IDS.forEach(key => {
+      const val = document.getElementById('f-' + key).value.trim();
+      if (val) params.append(key, val);
+    });
+ 
+    if (!params.toString()) {
+      setStatus('filter-status', 'Enter at least one filter value.', 'error');
+      return;
+    }
+    setStatus('filter-status', 'Querying...', 'info');
+ 
+    fetch('/api/cars?' + params.toString())
+      .then(r => r.json())
+      .then(data => {
+        setStatus('filter-status', '', '');
+        if (data.error) { setStatus('filter-status', data.error, 'error'); return; }
+        renderResults(data);
+      })
+      .catch(() => setStatus('filter-status', 'Connection error — is the Flask server running?', 'error'));
+  }
+ 
+  function renderResults(cars) {
+    const wrap  = document.getElementById('filter-results');
+    const tbody = document.getElementById('results-body');
+    const count = document.getElementById('result-count');
+    const hint  = document.getElementById('click-hint');
+ 
+    if (cars.length === 0) {
+      wrap.style.display = 'block';
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="big">∅</span>No vehicles match those filters.</div></td></tr>`;
+      count.textContent = '0 results';
+      hint.style.display = 'none';
+      return;
+    }
+ 
+    tbody.innerHTML = cars.map(c => `
+      <tr onclick="openCarById(${c.car_id})">
+        <td class="highlight">#${c.car_id}</td>
+        <td class="mono">${c.year}</td>
+        <td>${c.make}</td>
+        <td>${c.model}</td>
+      </tr>
+    `).join('');
+ 
+    count.textContent = `${cars.length} result${cars.length !== 1 ? 's' : ''}`;
+    wrap.style.display = 'block';
+    hint.style.display = 'block';
+  }
+ 
+  function clearFilters() {
+    FILTER_IDS.forEach(key => document.getElementById('f-' + key).value = '');
+    document.getElementById('filter-results').style.display = 'none';
+    document.getElementById('click-hint').style.display = 'none';
+    setStatus('filter-status', '', '');
+  }
+ 
+  // ── Add Car ──────────────────────────────────────────────────
+  function addCar() {
+    const get = id => document.getElementById('a-' + id).value.trim();
+ 
+    if (!get('make') || !get('model') || !get('year')) {
+      setStatus('add-status', 'Make, model, and year are required.', 'error');
+      return;
+    }
+ 
+    const body = { make: get('make'), model: get('model'), year: parseInt(get('year')) };
+    const optionals = [
+      'price','location','owner','seller',
+      'color','length','width','height','seats','tank_size',
+      'fuel_type','transmission','kilometers_driven',
+      'drivetrain','engine','max_power','max_torque'
+    ];
+    optionals.forEach(k => {
+      const v = get(k);
+      if (v) body[k] = isNaN(v) ? v : parseFloat(v);
+    });
+ 
+    fetch('/api/cars', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { setStatus('add-status', data.error, 'error'); return; }
+      setStatus('add-status', '✓ Vehicle successfully added to the database.', 'success');
+      clearAddForm();
+    })
+    .catch(() => setStatus('add-status', 'Connection error — is the Flask server running?', 'error'));
+  }
+ 
+  function clearAddForm() {
+    document.querySelectorAll('#panel-add input').forEach(i => i.value = '');
+  }
+ 
+  // ── View by ID ───────────────────────────────────────────────
+  function openCarById(id) {
+    // Switch to the view tab and pre-fill the ID
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-view').classList.add('active');
+    document.querySelectorAll('.tab-btn')[2].classList.add('active');
+    document.getElementById('v-id').value = id;
+    lookupCar();
+  }
+ 
+  function lookupCar() {
+    const id = document.getElementById('v-id').value.trim();
+    if (!id) { setStatus('view-status', 'Enter a vehicle ID.', 'error'); return; }
+ 
+    setStatus('view-status', 'Retrieving...', 'info');
+    document.getElementById('car-card-wrap').innerHTML = '';
+ 
+    fetch(`/api/cars/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        setStatus('view-status', '', '');
+        if (data.error) { setStatus('view-status', data.error, 'error'); return; }
+        renderCarCard(data);
+      })
+      .catch(() => setStatus('view-status', 'Connection error — is the Flask server running?', 'error'));
+  }
+ 
+  function val(v) {
+    if (v === null || v === undefined || v === 'NA' || v === -1) {
+      return `<span class="spec-val na">—</span>`;
+    }
+    return `<span class="spec-val">${v}</span>`;
+  }
+ 
+  function renderCarCard(c) {
+    document.getElementById('car-card-wrap').innerHTML = `
+      <div class="car-card">
+        <div class="car-card-header">
+          <h2>${c.year} ${c.make} ${c.model}</h2>
+          <span class="car-id-badge">ID #${c.car_id}</span>
+        </div>
+        <div class="car-card-body">
+          <div class="spec-group">
+            <div class="spec-group-title">Cost</div>
+            <div class="spec-row"><span class="spec-key">Price</span>${val(c.price)}</div>
+            <div class="spec-row"><span class="spec-key">Location</span>${val(c.location)}</div>
+            <div class="spec-row"><span class="spec-key">Owner Count</span>${val(c.owner)}</div>
+            <div class="spec-row"><span class="spec-key">Seller Type</span>${val(c.seller)}</div>
+          </div>
+          <div class="spec-group">
+            <div class="spec-group-title">Appearance</div>
+            <div class="spec-row"><span class="spec-key">Color</span>${val(c.color)}</div>
+            <div class="spec-row"><span class="spec-key">Length</span>${val(c.length)}</div>
+            <div class="spec-row"><span class="spec-key">Width</span>${val(c.width)}</div>
+            <div class="spec-row"><span class="spec-key">Height</span>${val(c.height)}</div>
+            <div class="spec-row"><span class="spec-key">Seats</span>${val(c.seats)}</div>
+            <div class="spec-row"><span class="spec-key">Tank Size</span>${val(c.tank_size)}</div>
+          </div>
+          <div class="spec-group">
+            <div class="spec-group-title">Performance</div>
+            <div class="spec-row"><span class="spec-key">Fuel Type</span>${val(c.fuel_type)}</div>
+            <div class="spec-row"><span class="spec-key">Transmission</span>${val(c.transmission)}</div>
+            <div class="spec-row"><span class="spec-key">Km Driven</span>${val(c.kilometers_driven)}</div>
+          </div>
+          <div class="spec-group">
+            <div class="spec-group-title">Specs</div>
+            <div class="spec-row"><span class="spec-key">Drivetrain</span>${val(c.drivetrain)}</div>
+            <div class="spec-row"><span class="spec-key">Engine</span>${val(c.engine)}</div>
+            <div class="spec-row"><span class="spec-key">Max Power</span>${val(c.max_power)}</div>
+            <div class="spec-row"><span class="spec-key">Max Torque</span>${val(c.max_torque)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
