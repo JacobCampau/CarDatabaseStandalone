@@ -2,15 +2,16 @@
 
 <h2>What is this project?</h2>
 
-A standalone version of my [Original Car Database](https://github.com/JacobCampau/CarDatabase.git) project. 
-
-<br>The original project required the user to set values in the code, download the dataset, and run the PostgreSQL on their device before running the application.</br>
-
-<br>To make this a more accessable tool, this project ensures there is no such expectation from the user.</br>
+This repo contains a database system that holds a large set of car information. Through running the system, the user can filter search cars, add cars, and search a car by its ID. It is the standalone version of my [Original Car Database](https://github.com/JacobCampau/CarDatabase.git) project. This version was made so I could learn SQLite in python and learn how to make a web GUI using Flask. The combination of these two goals resulted in a final project that works better than the original project.
 
 <h2>How to Run</h2>
 
-First the user needs to install the needed libraries. This can be done with the command: python3 -m pip install -r requirements.txt
+There are two ways to access the 'Car Filter Database'
+
+  1) Through the following link: https://carinformationdatabase.onrender.com
+  2) Through the bat file provided in the repository
+
+Upon the download of all files in this repository, running the bat file will run the database through your local host instead of through render.com
 
 <h2>Components of The System</h2>
 <h3>(1) Filter Option</h3>
