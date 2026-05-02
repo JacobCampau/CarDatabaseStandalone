@@ -8,8 +8,11 @@ This repo contains a database system that holds a large set of car information. 
 
 There are two ways to access the 'Car Filter Database'
 
-  1) Through the following link: https://carinformationdatabase.onrender.com
-  2) Through the bat file provided in the repository
+1) Through the following link: https://carinformationdatabase.onrender.com
+
+This is a read only website for the database. All added information will not be saved after you leave the website.
+
+2) Through the bat file provided in the repository
 
 Upon the download of all files in this repository, running the bat file will run the database through your local host instead of through render.com
 
